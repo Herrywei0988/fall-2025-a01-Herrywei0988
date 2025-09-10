@@ -9,9 +9,14 @@ Tasks:
 4. Group by manufacturer/class and analyze highway MPG
 """
 
-import pandas as pd
-from pathlib import Path
+
+from __future__ import annotations
+
 import logging
+from pathlib import Path
+from typing import Optional
+
+import pandas as pd
 
 
 # Configure logging
@@ -29,7 +34,10 @@ def create_output_directory() -> Path:
     TODO: Create 'data/output' directory
     Hint: Use Path.mkdir(parents=True, exist_ok=True)
     """
-    pass  # Your code here
+    out_dir = Path("data") / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"output directory ready at: {out_dir}")
+    return out_dir
 
 
 def read_and_describe_data(input_path: Path, output_dir: Path) -> pd.DataFrame:
@@ -42,7 +50,19 @@ def read_and_describe_data(input_path: Path, output_dir: Path) -> pd.DataFrame:
     3. Get descriptive statistics using .describe()
     4. Save statistics to 'descriptive.csv'
     """
-    pass  # Your code here
+    try:
+        df = pd.read_csv(input_path)
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Input file not found: {input_path}") from e
+
+    # Show first 5 rows to stdout
+    print(df.head())
+
+    desc = df.select_dtypes(include="number").describe()
+    desc_path = output_dir / "descriptive.csv"
+    desc.to_csv(desc_path)
+    logger.info(f"saved descriptive statistics to: {desc_path}")
+    return df
 
 
 def filter_audi_data(df: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
@@ -57,7 +77,12 @@ def filter_audi_data(df: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
     
     Hint: You can use .query() method or boolean indexing
     """
-    pass  # Your code here
+    filt = (df["manufacturer"] == "audi") & (df["model"] == "a4") & (df["cyl"] == 4)
+    audi = df.loc[filt].copy()
+    out_path = output_dir / "audi.csv"
+    audi.to_csv(out_path, index=False)
+    logger.info(f"saved filtered Audi data to: {out_path} (rows={len(audi)})")
+    return audi
 
 
 def analyze_highway_mpg(df: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
@@ -71,7 +96,16 @@ def analyze_highway_mpg(df: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
     4. Sort by 'hwy' in descending order
     5. Save to 'hwy.csv'
     """
-    pass  # Your code here
+    grouped = (
+        df.groupby(["class", "manufacturer"])["hwy"]
+        .mean()
+        .reset_index()
+        .sort_values(by="hwy", ascending=False)
+    )
+    out_path = output_dir / "hwy.csv"
+    grouped.to_csv(out_path, index=False)
+    logger.info(f"saved grouped hwy means to: {out_path} (rows={len(grouped)})")
+    return grouped
 
 
 def main():
@@ -84,8 +118,10 @@ def main():
         logger.error(f"Input file not found: {input_path}")
         return
     
-    # TODO: Call all task functions in order
-    # Remember to store return values and pass them to next functions
+    out_dir = create_output_directory()
+    df = read_and_describe_data(input_path, out_dir)
+    filter_audi_data(df, out_dir)
+    analyze_highway_mpg(df, out_dir)
     
 
 if __name__ == '__main__':
