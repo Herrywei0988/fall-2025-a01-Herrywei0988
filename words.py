@@ -22,7 +22,9 @@ def extract_words(text: str) -> Set[str]:
     Hint: Use regex pattern r'\b[a-zA-Z]+\b' to find words
     Remember to convert to lowercase for case-insensitive comparison
     """
-    pass  # Your code here
+    # Use regular expressions to find words and convert them all to lowercase
+    words = re.findall(r"\b[a-zA-Z]+\b", text.lower())
+    return set(words)
 
 
 def process_file(filepath: Path) -> List[str]:
@@ -34,7 +36,17 @@ def process_file(filepath: Path) -> List[str]:
     2. Extract unique words
     3. Return sorted list
     """
-    pass  # Your code here
+    try:
+        text = filepath.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        sys.stderr.write(f"Error: File not found: {filepath}\n")
+        sys.exit(1)
+    except Exception as e:
+        sys.stderr.write(f"Error reading file {filepath}: {e}\n")
+        sys.exit(1)
+
+    words = extract_words(text)
+    return sorted(words)
 
 
 def process_stdin() -> List[str]:
@@ -46,7 +58,9 @@ def process_stdin() -> List[str]:
     2. Extract unique words
     3. Return sorted list
     """
-    pass  # Your code here
+    text = sys.stdin.read()
+    words = extract_words(text)
+    return sorted(words)
 
 
 def main():
@@ -59,7 +73,15 @@ def main():
     3. If no, read from stdin
     4. Output words one per line
     """
-    pass  # Your code here
+    if len(sys.argv) > 1:
+        filepath = Path(sys.argv[1])
+        words = process_file(filepath)
+    else:
+        words = process_stdin()
+
+    # one word per line
+    for word in words:
+        print(word)
 
 
 if __name__ == '__main__':
